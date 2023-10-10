@@ -2,13 +2,13 @@ function FormJS() {
     const DEFAULT_ERROR_HANDLER = (ruleName, ruleParams, value) => {
         console.log('FormJS ERROR: ' + ruleName + ' "' + value + '"')
     }
-    
+
     const CPF_SEPARATORS = [[3, '.'], [7, '.'], [11, '-']] // nnn.nnn.nnn-nn
 
     const formJS = (errorHandler = DEFAULT_ERROR_HANDLER) => {
         const ruleList = []
 
-        const verify = (value) => {
+        const validator = (value) => {
             for (const ruleIndex in ruleList) {
                 const [ruleName, ruleParams, rule] = ruleList[ruleIndex]
                 const accepted = rule(value)
@@ -22,23 +22,23 @@ function FormJS() {
             return true
         }
 
-        verify.setErrorHandler = (_errorHandler) => {
+        validator.setErrorHandler = (_errorHandler) => {
             errorHandler = _errorHandler
 
-            return verify
+            return validator
         }
 
         const createRule = (name, func) => {
-            verify[name] = (...params) => {
+            validator[name] = (...params) => {
                 ruleList.push([name, params, (value) => func(params, value)])
 
-                return verify
+                return validator
             }
 
-            return verify
+            return validator
         }
 
-        verify.createRule = createRule
+        validator.createRule = createRule
 
         createRule('notEmpty', (params, value) => {
             return value.trim().length > 0
@@ -90,32 +90,32 @@ function FormJS() {
             if (value.length < 11 || value.length > 14) { // Min/Max CPF length
                 return false;
             }
-            
+
             if (checkSeparators) {
                 for (const [index, target] of CPF_SEPARATORS) {
                     if (value.charAt(index) != target) {
                         return false
-                    }    
+                    }
                 }
             }
-            
+
             var sum = 0;
             var count = 0;
-            
+
             for (let i = 0; i < value.length; i++) {
                 const char = value.charAt(i)
-                
+
                 if (!isNaN(char)) {
                     sum += parseInt(char);
                     count++;
                 }
             }
-            
+
             const { floor } = Math
-            
+
             const ten = floor(sum / 10) // 15 = 1
             const ones = floor(sum % 10) // 15 = 5
-            
+
             return ones == ten && count == 11
         })
 
@@ -128,45 +128,50 @@ function FormJS() {
                     D uppercase digit
                     w whole case digit
                     / literal char
+                    \b end (used internally)
             */
 
             const checkFormat = (formatStr, value) => {
+                formatStr += '\b'
+                
                 var offset = 0
-                for (let i = 0; i < formatStr.length; i++) {
-                    const char = value.charAt(i - offset)
-                    const target = formatStr.charAt(i)
+                for (let index = 0; index < formatStr.length; index++) {
+                    const char = value.charAt(index - offset)
+                    const target = formatStr.charAt(index)
 
                     switch (target) {
-                        case "#":
-                            /* Accept any char */
+                        case "#": // Accept any char
                             break;
-                        case "n":
+                        case "n": // Numbers
                             if (isNaN(char)) return false
                             break;
-                        case "d":
+                        case "d": // Lower case digit (a-z)
                             if (!char.match('[a-z]')) return false
                             break;
-                        case "D":
+                        case "D": // Upper case digit (A-Z)
                             if (!char.match('[A-Z]')) return false
                             break;
-                        case "d":
-                            if (!char.match('[a-z]')) return false
+                        case "w": // Whole case digit (A-z)
+                            if (!char.match('[A-z]')) return false
                             break;
-                        case "/":
-                            const nextTarget = formatStr.charAt(i + 1)
+                        case "/": // Force literal char
+                            const nextTarget = formatStr.charAt(index + 1)
 
                             if (char !== nextTarget) return false
 
-                            i++
+                            index++
                             offset++
 
                             break;
-                        default:
-                            console.log('Literal: ' + target)
-                            if (char !== target) return false;
+                        case '\b': // End format (check is input length matches format length)
+                            if (index - offset < value.length) return false 
+                            break;
+                        default: // Literal char
+                            if (char !== target) return false; 
                             break;
                     }
                 }
+                
                 return true
             }
 
@@ -221,26 +226,36 @@ function FormJS() {
             return false
         })
 
-        return verify;
+        return validator;
     }
 
     return formJS
 }
 
 try {
-    FormJS_test()
-} catch(err) {
+    FormJSTests()
+} catch (err) {
     console.log(err)
     document.body.innerText = err;
 }
 
-function FormJS_test() {
+function FormJSTests() {
     const formJS = FormJS()
     
-    const validator = formJS()
+    validCPF_test(formJS)
+    format_test(formJS)
+}
+
+function validCPF_test(formJS) {
+    var validator, dataset
+
+    validator = formJS()
         .validCPF(true)
-        
-    const dataset = [
+
+    dataset = [
+        ['123.456.789-19', true],
+        ['123.456.789-28', true],
+        ['114.456.789-28', true],
         ['123.456.789-19', true],
         ['123.456.789-10', false],
         ['123.456.78910', false],
@@ -248,11 +263,75 @@ function FormJS_test() {
         ['123.456.789.10', false],
     ]
     
+    test(validator, dataset)
+    
+    validator = formJS()
+        .validCPF(false)
+    
+    dataset = [
+            ['123.456.789-19', true],
+            ['123a456.789-19', true],
+            ['123456.789-19', true],
+            ['123.456789-19', true],
+            ['123.456.789-10', false],
+            ['123.456.78910', false],
+            ['12345678910', false],
+            ['123.456.789.10', false],
+            ['123.456.789.19', true],
+            ['123.456.7810', false],
+            ['1234567810', false],
+        ]
+    
+    test(validator, dataset)
+}
+
+function format_test(formJS) {
+    var validator, dataset;
+    
+    validator = formJS()
+        .format('ndDw-/n#')
+        
+    const DIGITS = 'abcdefghijklmnopqrstuvwxyz'
+    const ANYTHING = DIGITS + DIGITS.toUpperCase() + '1234567890#$%.,?(){}'
+    
+    const generateTest = (result) => {
+        const number = Math.floor(Math.random() * 10)
+        const lowerCaseDigit = DIGITS.charAt(Math.floor(Math.random() * DIGITS.length))
+        const upperCaseDigit = DIGITS.charAt(Math.floor(Math.random() * DIGITS.length)).toUpperCase()
+        const wholeCaseDigit = Math.random() < .5 ? lowerCaseDigit : upperCaseDigit
+        const randomChar = ANYTHING.charAt(Math.floor(Math.random() * ANYTHING.length))
+        
+        var test = number + lowerCaseDigit + upperCaseDigit + wholeCaseDigit + '-n' + randomChar
+        
+        if (!result) {
+            if (Math.random() < .5) 
+                test = test.substring(1, test.length)
+            else 
+                test = test + wholeCaseDigit
+        }
+        
+        return test
+    }
+    
+    dataset = []
+    
+    for (let i = 0; i < 20; i++) {
+        dataset.push([generateTest(true), true])
+    }
+    
+    for (let i = 0; i < 20; i++) {
+        dataset.push([generateTest(false), false])
+    }
+    
+    test(validator, dataset)
+}
+
+function test(validator, dataset) {
     for (const test of dataset) {
         var [value, result] = test
-        
+
         if (validator(value) != result) {
-            throw new Error('FormJS Test Error for '+value)
+            throw new Error('FormJS Test Error for ' + value)
         }
     }
 }
