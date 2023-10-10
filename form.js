@@ -3,15 +3,17 @@ function FormJS() {
         console.log('FormJS ERROR: ' + ruleName + ' "' + value + '"')
     }
     
-    const formJS = (errorHandler=DEFAULT_ERROR_HANDLER) => {
+    const CPF_SEPARATORS = [[3, '.'], [7, '.'], [11, '-']] // nnn.nnn.nnn-nn
+
+    const formJS = (errorHandler = DEFAULT_ERROR_HANDLER) => {
         const ruleList = []
 
         const verify = (value) => {
             for (const ruleIndex in ruleList) {
-                const [ ruleName, ruleParams, rule ] = ruleList[ruleIndex]
-                const valid = rule(value)
+                const [ruleName, ruleParams, rule] = ruleList[ruleIndex]
+                const accepted = rule(value)
 
-                if (!valid) {
+                if (!accepted) {
                     errorHandler(ruleName, ruleParams, value)
                     return false
                 }
@@ -19,10 +21,10 @@ function FormJS() {
 
             return true
         }
-        
+
         verify.setErrorHandler = (_errorHandler) => {
             errorHandler = _errorHandler
-        
+
             return verify
         }
 
@@ -32,13 +34,13 @@ function FormJS() {
 
                 return verify
             }
-            
+
             return verify
         }
 
         verify.createRule = createRule
 
-        createRule('notEmpty', ([], value) => {
+        createRule('notEmpty', (params, value) => {
             return value.trim().length > 0
         })
 
@@ -76,7 +78,7 @@ function FormJS() {
             return false
         })
 
-        createRule('number', ([], value) => {
+        createRule('number', (params, value) => {
             return !isNaN(value)
         })
 
@@ -84,51 +86,37 @@ function FormJS() {
             return value >= min && value <= max
         })
 
-        createRule('validCPF', ([ignoreSeparators = false], value) => {
-            if (!ignoreSeparators) {
-                if (value.length != 14) { //nnn.nnn.nnn-nn
-                    return false
-                }
-
-                const indexes = [[3, "."], [7, "."], [11, "-"]]
-                for (let i = 0; i < indexes.length; i++) { // nnn.nnn.nnn-nn
-                    const [index, separator] = indexes[i]
-                    const char = value.charAt(index)
-
-                    if (char != separator) {
+        createRule('validCPF', ([checkSeparators], value) => {
+            if (value.length < 11 || value.length > 14) { // Min/Max CPF length
+                return false;
+            }
+            
+            if (checkSeparators) {
+                for (const [index, target] of CPF_SEPARATORS) {
+                    if (value.charAt(index) != target) {
                         return false
-                    }
+                    }    
                 }
             }
-
-            var cpfNumbers = ""
-
+            
+            var sum = 0;
+            var count = 0;
+            
             for (let i = 0; i < value.length; i++) {
                 const char = value.charAt(i)
-
-                if (isNaN(char)) {
-                    continue
-                }
-
-                cpfNumbers += char
-            }
-
-            var sum = 0
-            for (let i = 0; i < 11; i++) { // nnn.nnn.nnn-nn
-                sum += parseInt(cpfNumbers.charAt(i))
-            }
-
-            const stringSum = sum.toString()
-            const firstChar = stringSum.charAt(0)
-
-            for (let i = 0; i < stringSum.length; i++) {
-                const char = stringSum.charAt(i)
-                if (char !== firstChar) {
-                    return false
+                
+                if (!isNaN(char)) {
+                    sum += parseInt(char);
+                    count++;
                 }
             }
-
-            return true
+            
+            const { floor } = Math
+            
+            const ten = floor(sum / 10) // 15 = 1
+            const ones = floor(sum % 10) // 15 = 5
+            
+            return ones == ten && count == 11
         })
 
         createRule('format', (formatStrings, value) => {
@@ -141,7 +129,7 @@ function FormJS() {
                     w whole case digit
                     / literal char
             */
-            
+
             const checkFormat = (formatStr, value) => {
                 var offset = 0
                 for (let i = 0; i < formatStr.length; i++) {
@@ -237,4 +225,34 @@ function FormJS() {
     }
 
     return formJS
+}
+
+try {
+    FormJS_test()
+} catch(err) {
+    console.log(err)
+    document.body.innerText = err;
+}
+
+function FormJS_test() {
+    const formJS = FormJS()
+    
+    const validator = formJS()
+        .validCPF(true)
+        
+    const dataset = [
+        ['123.456.789-19', true],
+        ['123.456.789-10', false],
+        ['123.456.78910', false],
+        ['12345678910', false],
+        ['123.456.789.10', false],
+    ]
+    
+    for (const test of dataset) {
+        var [value, result] = test
+        
+        if (validator(value) != result) {
+            throw new Error('FormJS Test Error for '+value)
+        }
+    }
 }
