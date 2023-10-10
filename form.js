@@ -1,148 +1,139 @@
 function FormJS() {
-    const formJS = () => {
+    const DEFAULT_ERROR_HANDLER = (ruleName, ruleParams, value) => {
+        console.log('FormJS ERROR: ' + ruleName + ' "' + value + '"')
+    }
+    
+    const formJS = (errorHandler=DEFAULT_ERROR_HANDLER) => {
         const ruleList = []
 
         const verify = (value) => {
-
-            for (const ruleName in ruleList) {
-                const rule = ruleList[ruleName]
+            for (const ruleIndex in ruleList) {
+                const [ ruleName, ruleParams, rule ] = ruleList[ruleIndex]
                 const valid = rule(value)
 
                 if (!valid) {
-                    if (rule.err) rule.err(value)
+                    errorHandler(ruleName, ruleParams, value)
                     return false
                 }
             }
 
             return true
         }
-
-        verify.err = (errorHandler) => {
-            ruleList[ruleList.length - 1].err = errorHandler
-
+        
+        verify.setErrorHandler = (_errorHandler) => {
+            errorHandler = _errorHandler
+        
             return verify
         }
 
-        verify.notEmpty = () => {
-            ruleList.push((value) => value.trim().length > 0)
+        const createRule = (name, func) => {
+            verify[name] = (...params) => {
+                ruleList.push([name, params, (value) => func(params, value)])
 
-            return verify
-        }
-
-        verify.minLength = (minLength) => {
-            ruleList.push((value) => value.length >= minLength)
-
-            return verify
-        }
-
-        verify.maxLength = (maxLength) => {
-            ruleList.push((value) => value.length <= maxLength)
-
-            return verify
-        }
-
-        verify.len = (minLength, maxLength) => {
-            ruleList.push((value) => value.length >= minLength && value.length <= maxLength)
+                return verify
+            }
             
             return verify
         }
 
-        verify.fixedLength = (...fixedLengths) => {
-            ruleList.push((value) => {
-                for (const length of fixedLengths) {
-                    if (value.length == length) {
-                        return true
-                    }
+        verify.createRule = createRule
+
+        createRule('notEmpty', ([], value) => {
+            return value.trim().length > 0
+        })
+
+        createRule('minLength', ([minLength], value) => {
+            return value.length >= minLength
+        })
+
+        createRule('maxLength', ([maxLength], value) => {
+            return value.length <= maxLength
+        })
+
+        createRule('rangeLength', ([minLength, maxLength], value) => {
+            return value.length >= minLength && value.length <= maxLength
+        })
+
+        createRule('fixedLength', (fixedLengths, value) => {
+            for (const length of fixedLengths) {
+                if (value.length == length) {
+                    return true
+                }
+            }
+
+            return false
+        })
+
+        createRule('match', (regexPatterns, value) => {
+            for (const regex of regexPatterns) {
+                const match = value.match(regex)
+
+                if (match) {
+                    return true
+                }
+            }
+
+            return false
+        })
+
+        createRule('number', ([], value) => {
+            return !isNaN(value)
+        })
+
+        createRule('range', ([min, max], value) => {
+            return value >= min && value <= max
+        })
+
+        createRule('validCPF', ([ignoreSeparators = false], value) => {
+            if (!ignoreSeparators) {
+                if (value.length != 14) { //nnn.nnn.nnn-nn
+                    return false
                 }
 
-                return false
-            })
+                const indexes = [[3, "."], [7, "."], [11, "-"]]
+                for (let i = 0; i < indexes.length; i++) { // nnn.nnn.nnn-nn
+                    const [index, separator] = indexes[i]
+                    const char = value.charAt(index)
 
-            return verify
-        }
-
-        verify.match = (...regexPatterns) => {
-            ruleList.push((value) => {
-                for (const regex of regexPatterns) {
-                    const match = value.match(regex)
-
-                    if (match) {
-                        return true
-                    }
-                }
-
-                return false
-            })
-
-            return verify
-        }
-
-        verify.isNumber = () => {
-            ruleList.push((value) => !isNaN(value))
-
-            return verify
-        }
-
-        verify.range = (min, max) => { // range for number values
-            ruleList.push((value) => value >= min && value <= max)
-
-            return verify
-        }
-
-        verify.validCPF = (ignoreSeparators = true) => {
-            ruleList.push((value) => {
-                if (!ignoreSeparators) {
-                    if (value.length != 14) { //nnn.nnn.nnn-nn
-                        return false
-                    }
-
-                    const indexes = [[3, "."], [7, "."], [11, "-"]]
-                    for (let i = 0; i < indexes.length; i++) { // nnn.nnn.nnn-nn
-                        const [index, separator] = indexes[i]
-                        const char = value.charAt(index)
-
-                        if (char != separator) {
-                            return false
-                        }
-                    }
-                }
-
-                var cpfNumbers = ""
-
-                for (let i = 0; i < value.length; i++) {
-                    const char = value.charAt(i)
-
-                    if (isNaN(char)) {
-                        continue
-                    }
-
-                    cpfNumbers += char
-                }
-
-                var sum = 0
-                for (let i = 0; i < 11; i++) { // nnn.nnn.nnn-nn
-                    sum += parseInt(cpfNumbers.charAt(i))
-                }
-
-                const stringSum = sum.toString()
-                const firstChar = stringSum.charAt(0)
-
-                for (let i = 0; i < stringSum.length; i++) {
-                    const char = stringSum.charAt(i)
-                    if (char !== firstChar) {
+                    if (char != separator) {
                         return false
                     }
                 }
+            }
 
-                return true
-            })
+            var cpfNumbers = ""
 
-            return verify
-        }
+            for (let i = 0; i < value.length; i++) {
+                const char = value.charAt(i)
 
-        verify.format = (...formatStrings) => {
+                if (isNaN(char)) {
+                    continue
+                }
+
+                cpfNumbers += char
+            }
+
+            var sum = 0
+            for (let i = 0; i < 11; i++) { // nnn.nnn.nnn-nn
+                sum += parseInt(cpfNumbers.charAt(i))
+            }
+
+            const stringSum = sum.toString()
+            const firstChar = stringSum.charAt(0)
+
+            for (let i = 0; i < stringSum.length; i++) {
+                const char = stringSum.charAt(i)
+                if (char !== firstChar) {
+                    return false
+                }
+            }
+
+            return true
+        })
+
+        createRule('format', (formatStrings, value) => {
             /*
-                format
+                Format:
                     # any
                     n number
                     d lowercase digit
@@ -150,7 +141,7 @@ function FormJS() {
                     w whole case digit
                     / literal char
             */
-
+            
             const checkFormat = (formatStr, value) => {
                 var offset = 0
                 for (let i = 0; i < formatStr.length; i++) {
@@ -191,104 +182,59 @@ function FormJS() {
                 return true
             }
 
-            ruleList.push((value) => {
-                for (const index in formatStrings) {
-                    const formatStr = formatStrings[index]
-                    const match = checkFormat(formatStr, value)
+            for (const formatStr of formatStrings) {
+                const match = checkFormat(formatStr, value)
 
-                    if (match) {
-                        return true
-                    }
+                if (match) {
+                    return true
                 }
-
-                return false
-            })
-
-            return verify
-        }
-
-        verify.contains = (...terms) => { // Contains almost one
-            ruleList.push((value) => {
-                for (const term of terms) {
-                    if (value.includes(term)) {
-                        return true
-                    }
-                }
-
-                return false
-            })
-
-            return verify
-        }
-
-        verify.containsAll = (...terms) => { // Contains all
-            ruleList.push((value) => {
-                for (const term of terms) {
-                    if (!value.includes(term)) {
-                        return false
-                    }
-                }
-
-                return true
-            })
-
-            return verify
-        }
-
-        verify.custom = (...rules) => {
-            for (const rule of rules) {
-                ruleList.push(rule)
             }
 
-            return verify
-        }
+            return false
+        })
 
-        verify.prefix = (...prefixes) => {
-            ruleList.push((value) => {
-                for (const prefix of prefixes) {
-                    if (value.startsWith(prefix)) {
-                        return true
-                    }
+        createRule('contains', (terms, value) => {
+            for (const term of terms) {
+                if (value.includes(term)) {
+                    return true
                 }
+            }
 
-                return false
-            })
+            return false
+        })
 
-            return verify
-        }
-
-        verify.sufix = (...sufixes) => {
-            ruleList.push((value) => {
-                for (const sufix of sufixes) {
-                    if (value.endsWith(sufix)) {
-                        return true
-                    }
+        createRule('containsAll', (terms, value) => {
+            for (const term of terms) {
+                if (!value.includes(term)) {
+                    return false
                 }
+            }
 
-                return false
-            })
+            return true
+        })
 
-            return verify
-        }
+        createRule('prefix', (prefixes, value) => {
+            for (const prefix of prefixes) {
+                if (value.startsWith(prefix)) {
+                    return true
+                }
+            }
+
+            return false
+        })
+
+        createRule('sufix', (sufixes, value) => {
+            for (const sufix of sufixes) {
+                if (value.endsWith(sufix)) {
+                    return true
+                }
+            }
+
+            return false
+        })
 
         return verify;
     }
 
     return formJS
 }
-
-// .isNumber()
-// .range(10, 40)
-// .notEmpty()
-// .minLength(5)
-// .maxLength(32)
-// .length(5, 32)
-// .fixedLength(5, 10)
-// .match(/[a-z]+/g)
-// .validCPF()
-// .format('nnn.nnn-dd', 'nnnnnndd')
-// .contains('a')
-// .containsAll('@', '.')
-// .custom(email).err(invalidEmail)
-// .prefix('http://', 'https://')
-// .sufix('@gmail.com', '@hotmail.com')

@@ -1,0 +1,109 @@
+.cm-s-custom.CodeMirror {
+    width: 100%;
+    height: 100%;
+    background-color: #aaa0;
+    color: #EEEEEE;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    transition: .2s;
+}
+
+.cm-s-custom.CodeMirror.error {
+    border: 2px solid #f005;
+    box-shadow: inset 40px 0px 40px #f005;
+}
+
+.cm-s-custom .CodeMirror-gutters {
+    padding-right: 10px;
+    background: #dddddd00;
+    /*#2b2b2b;*/
+    border-right: 1px dashed #aaa5;
+}
+
+.cm-s-custom .CodeMirror-linenumber {
+    color: #aab;
+    font-style: bold;
+}
+
+.cm-s-custom .CodeMirror-activeline-background {
+    background: #fff1;
+}
+
+.cm-s-custom .CodeMirror-line::selection,
+.cm-s-custom .CodeMirror-line>span::selection,
+.cm-s-custom .CodeMirror-line>span>span::selection {
+    background: #f003;
+}
+
+.cm-s-custom .CodeMirror-line::-moz-selection,
+.cm-s-custom .CodeMirror-line>span::-moz-selection,
+.cm-s-custom .CodeMirror-line>span>span::-moz-selection {
+    background: #f003;
+}
+
+.cm-s-custom .cm-keyword {
+    color: #c07;
+    font-weight: bold;
+}
+
+.cm-s-custom .cm-operator {
+    color: #0af;
+}
+
+.cm-s-custom .cm-operator-2 {
+    color: #f60;
+}
+
+.cm-s-custom .cm-variable {
+    color: #acf;
+}
+
+.cm-s-custom .cm-property {
+    color: #faa;
+}
+
+.cm-s-custom .cm-variable-2 {
+    color: #afc;
+}
+
+.cm-s-custom .cm-variable-3 {
+    color: #b7d;
+}
+
+.cm-s-custom .cm-type {
+    color: #4bd;
+}
+
+.cm-s-custom .cm-atom {
+    color: #da0;
+    font-weight: bold;
+}
+
+.cm-s-custom .cm-number {
+    color: #FF93a0;
+}
+
+.cm-s-custom .cm-string {
+    color: #b3E98D;
+}
+
+.cm-s-custom .cm-comment {
+    color: #338833;
+    font-style: italic;
+}
+
+.cm-s-custom .cm-todo {
+    padding-inline: 3px;
+    color: #fe0;
+    border-radius: 2px;
+}
+
+.cm-s-custom .cm-debug {
+    padding-inline: 3px;
+    color: #08f;
+    border-radius: 2px;
+}
+
+.cm-s-custom .cm-def {
+    color: #08f;
+}

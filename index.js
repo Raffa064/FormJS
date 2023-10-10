@@ -2,16 +2,18 @@ const formJS = FormJS()
 
 const nameInput = document.querySelector('#name')
 const nameError = document.querySelector('#name + span')
-
 const emailInput = document.querySelector('#email')
 const emailError = document.querySelector('#email + span')
-
 const cpfInput = document.querySelector('#cpf')
 const cpfError = document.querySelector('#cpf + span')
 
 const verifyName = formJS()
-    .notEmpty().err(error(nameError, 'Name can\'t be empty'))
-    .len(5, 32).err(error(nameError, 'Invalid length'))
+    .notEmpty()
+    .rangeLength(5, 32)
+    .setErrorHandler(createError(nameError, {
+        notEmpty: 'Name can\'t be empty',
+        rangeLength: 'Invalid length'
+    }))
 
 nameInput.oninput = () => {
     if (verifyName(nameInput.value)) {
@@ -23,10 +25,16 @@ nameInput.oninput = () => {
 }
 
 const verifyEmail = formJS()
-    .notEmpty().err(error(emailError, 'Email can\'t be empty'))
-    .len(5, 64).err(error(emailError, 'Invalid email length'))
-    .containsAll('@', '.').err(error(emailError, 'Invalid email format'))
-    .sufix('gmail.com', 'hotmail.com').err(error(emailError, 'Invalid email format'))
+    .notEmpty()
+    .rangeLength(5, 64)
+    .containsAll('@', '.')
+    .sufix('gmail.com', 'hotmail.com')
+    .setErrorHandler(createError(emailError, {
+        notEmpty: 'Email can\'t be empty',
+        rangeLength: 'Invalid length',
+        containsAll: 'Invalid email',
+        sufix: 'Invalid email'
+    }))
 
 emailInput.oninput = () => {
     if (verifyEmail(emailInput.value)) {
@@ -38,9 +46,14 @@ emailInput.oninput = () => {
 }
 
 const verifyCPF = formJS()
-    .notEmpty().err(error(cpfError, 'CPF can\'t be empty'))
-    .format('nnn.nnn.nnn-nn').err(error(cpfError, 'CPF must be formated nnn.nnn.nnn-nn'))
-    .validCPF().err(error(cpfError, 'Invalid CPF'))
+    .notEmpty()
+    .format('nnn.nnn.nnn-nn')
+    .validCPF()
+    .setErrorHandler(createError(cpfError, {
+        notEmpty: 'CPF can\'t be empty',
+        format: 'Invalid CPF format',
+        validCPF: 'Invalid CPF'
+    }))
 
 cpfInput.oninput = () => {
     if (verifyCPF(cpfInput.value)) {
@@ -51,8 +64,8 @@ cpfInput.oninput = () => {
     cpfInput.classList.add('error')
 }
 
-function error(errorSpan, errorMessage) {
-    return () => {
-        errorSpan.innerText = "Error: " + errorMessage
+function createError(span, messages) {
+    return (ruleName, ruleParams, value) => {
+        span.innerText = messages[ruleName]
     }
 }

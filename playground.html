@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Playground</title>
+
+    <link rel="stylesheet" href="codemirror/codemirror.css">
+    <link rel="stylesheet" href="custom-cm-theme.css">
+    
+    <script type="text/javascript" src="./codemirror/codemirror.js"></script>
+    <script type="text/javascript" src="./codemirror/markdown.js"></script>
+    <script type="text/javascript" src="./codemirror/javascript.js"></script>
+    <script type="text/javascript" src="./codemirror/sublime.js"></script>
+    <script type="text/javascript" src="./codemirror/simple.js"></script>
+    <script type="text/javascript" src="./codemirror/active-line.js"></script>
+
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            border: none;
+            outline: none;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        body {
+            width: 100vw;
+            min-height: 100vh;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #3f0000, #00002f);
+            color: #ddd;
+        }
+
+        h1 {
+            padding-bottom: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px 20px;
+            background: transparent;
+            color: #bbb;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            transition: .4s;
+        }
+        
+        input:hover {
+            border-color: #aaa;
+        }
+        
+        input+span {
+            height: 40px;
+            display: block;
+            padding-top: 5px;
+            text-align: right;
+            color: #f86;
+            opacity: 0;
+            transition: .2s;
+        }
+        
+        input.error {
+            border-color: #f86;
+        }
+        
+        input.error+span {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Form<span style="text-shadow: -1px 1px 5px #f00b, 1px -1px 5px #00fc;">JS</span> Playground</h1>
+    
+    <input id="input" placeholder="Input something...">
+    <span id="span-error"/>
+
+    <textarea id="editor">
+const formJS = FormJS() // Load FormJS library
+
+const customErrors = {
+    notEmpty: 'Can\'t be empty',
+    // You can change the error messages here
+}
+
+const validator = formJS(onError) // Contruct validator
+    // Uncomment rules to test them
+    .notEmpty()
+    //.minLength(4)
+    //.maxLength(60)
+    //.rangeLength(4, 60)
+    //.fixedLength(5, 10, 15)
+    //.match(/\d+/g)
+    //.number()
+    //.range(10, 20)
+    //.validCPF(true)
+    //.format('nnn-dd-D', 'nnnddD')
+    //.contains('Raffa')
+    //.containsAll('Raffa', '064')
+    //.prefix('pre', 'p')
+    //.sufix('suf', 's')
+    //.createRule('link', ([], value) => value.startsWith('https://'))
+    //.link()
+    //.createRule('custom', (a, b, value) => value === a + b)
+    //.custom(5, 6)
+    
+input.oninput = () => {
+    input.classList.remove('error')
+    
+    if (!validator(input.value)) { // Apply validation on input
+        input.classList.add('error')
+    }
+}
+
+function onError(ruleName, params, value) {
+    span.innerText = customErrors[ruleName] || ruleName // Show error
+}
+    </textarea>
+
+    <script src="form.js"></script>
+    <script src="playground.js"></script>
+</body>
+
+</html>
