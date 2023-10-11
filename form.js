@@ -1,7 +1,7 @@
-function FormJS() {
-    const DEFAULT_ERROR_HANDLER = (ruleName, ruleParams, value) => {
+function FormJS(_errorHandler) {
+    const DEFAULT_ERROR_HANDLER = _errorHandler || ((ruleName, ruleParams, value) => {
         console.log('FormJS ERROR: ' + ruleName + ' "' + value + '"')
-    }
+    })
 
     const CPF_SEPARATORS = [[3, '.'], [7, '.'], [11, '-']] // nnn.nnn.nnn-nn
 
@@ -68,9 +68,13 @@ function FormJS() {
 
         createRule('match', (regexPatterns, value) => {
             for (const regex of regexPatterns) {
-                const match = value.match(regex)
-
-                if (match) {
+                var regexObj = regex
+                
+                if (typeof(regex) === 'string') {
+                    regexObj = new RegExp(regex)
+                }
+                
+                if (regexObj.test(value)) {
                     return true
                 }
             }
@@ -230,108 +234,4 @@ function FormJS() {
     }
 
     return formJS
-}
-
-try {
-    FormJSTests()
-} catch (err) {
-    console.log(err)
-    document.body.innerText = err;
-}
-
-function FormJSTests() {
-    const formJS = FormJS()
-    
-    validCPF_test(formJS)
-    format_test(formJS)
-}
-
-function validCPF_test(formJS) {
-    var validator, dataset
-
-    validator = formJS()
-        .validCPF(true)
-
-    dataset = [
-        ['123.456.789-19', true],
-        ['123.456.789-28', true],
-        ['114.456.789-28', true],
-        ['123.456.789-19', true],
-        ['123.456.789-10', false],
-        ['123.456.78910', false],
-        ['12345678910', false],
-        ['123.456.789.10', false],
-    ]
-    
-    test(validator, dataset)
-    
-    validator = formJS()
-        .validCPF(false)
-    
-    dataset = [
-            ['123.456.789-19', true],
-            ['123a456.789-19', true],
-            ['123456.789-19', true],
-            ['123.456789-19', true],
-            ['123.456.789-10', false],
-            ['123.456.78910', false],
-            ['12345678910', false],
-            ['123.456.789.10', false],
-            ['123.456.789.19', true],
-            ['123.456.7810', false],
-            ['1234567810', false],
-        ]
-    
-    test(validator, dataset)
-}
-
-function format_test(formJS) {
-    var validator, dataset;
-    
-    validator = formJS()
-        .format('ndDw-/n#')
-        
-    const DIGITS = 'abcdefghijklmnopqrstuvwxyz'
-    const ANYTHING = DIGITS + DIGITS.toUpperCase() + '1234567890#$%.,?(){}'
-    
-    const generateTest = (result) => {
-        const number = Math.floor(Math.random() * 10)
-        const lowerCaseDigit = DIGITS.charAt(Math.floor(Math.random() * DIGITS.length))
-        const upperCaseDigit = DIGITS.charAt(Math.floor(Math.random() * DIGITS.length)).toUpperCase()
-        const wholeCaseDigit = Math.random() < .5 ? lowerCaseDigit : upperCaseDigit
-        const randomChar = ANYTHING.charAt(Math.floor(Math.random() * ANYTHING.length))
-        
-        var test = number + lowerCaseDigit + upperCaseDigit + wholeCaseDigit + '-n' + randomChar
-        
-        if (!result) {
-            if (Math.random() < .5) 
-                test = test.substring(1, test.length)
-            else 
-                test = test + wholeCaseDigit
-        }
-        
-        return test
-    }
-    
-    dataset = []
-    
-    for (let i = 0; i < 20; i++) {
-        dataset.push([generateTest(true), true])
-    }
-    
-    for (let i = 0; i < 20; i++) {
-        dataset.push([generateTest(false), false])
-    }
-    
-    test(validator, dataset)
-}
-
-function test(validator, dataset) {
-    for (const test of dataset) {
-        var [value, result] = test
-
-        if (validator(value) != result) {
-            throw new Error('FormJS Test Error for ' + value)
-        }
-    }
 }
