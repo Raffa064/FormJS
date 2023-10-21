@@ -1,4 +1,4 @@
-const formJS = FormJS()
+const formJS = new FormJS()
 
 const nameInput = document.querySelector('#name')
 const nameError = document.querySelector('#name + span')

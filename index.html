@@ -26,127 +26,52 @@
 
     <section class="section">
         <h1>About</h1>
-        <p>FormJS is a javascript library to make form validation more easy.</p>
-        <p>Actually the library has up to 15 validation presets, but you can add your own validations if necessary.</p>
-        <p>Some of current features includes:</p>
+        <p>FormJS is a javascript library to performing form validation quickly and easy.</p>
+        <p>Some of the standart validations include:</p>
         <ul>
-            <li>Non empty field validation</li>
+            <li>Non empty</li>
+            <li>Formatted input </li>
+            <li>Numbers, and ranged numbers</li>
+            <li>Minimum, maximum, and fixed lengths</li>
+            <li>Prefix and sufix</li>
             <li>CPF validation</li>
-            <li>Formated field validation</li>
-            <li>Length validation</li>
-            <li>And much more</li>
+            <li>And much more!</li>
         </ul>
+        
         <h1>How to use</h1>
-        <p>Into your html, place this script tag to import FormJS to your project:</p>
+        
+        <h2>Adding FormJS to the project</h2>
+        <p>Actually you can add FormJS into your project by including it's (file)[] to your project, or using CDN tag as shown in the following code:</p>
         <snippet lang="html">
 <pre>
-&lt;script src="https://cdn.jsdelivr.net/gh/Raffa064/FormJS@main/form.js">&lt;/script>
+&lt;script src="https://cdn.jsdelivr.net/gh/Raffa064/FormJS@main/form.js"&gt;&lt;/script&gt;
 </pre>
         </snippet>
-        <p>You can also <a href="https://cdn.jsdelivr.net/gh/Raffa064/FormJS@main/form.js" download>download FormJS</a> and add it's file to your project.</p>
-        <p>After it, you just need to instanciate FormJS and use it to create your validators:</p>
-        <snippet lang="js">
+        
+        <h2>First Steps</h2>
+        <p>Before performing validations with FormJS, you will need to instanciate it:</p>
+        <snippet>
 <pre>
-const formJS = FormJS()
+const formJS = FormJS(onError)
 
-const validator = formJS()
-    .notEmpty()
-    .minLength(5)
-    // Add other rules here
-
-const name = 'Raffa064'
-
-if (validator(name)) {
-    // Valid name
-} else {
-    // Invalid name
+function onError(ruleName, ruleParams, value) {
+    // do something...
 }
 </pre>
         </snippet>
-        <h1>Validation rules</h1>
-        <p>See below a complete list of all validation rules available in FormJS:</p>
+        <p>Note that the onError function is optional, but when passed is used as default for all validations.</p>
+        <p>After it, you can create customized validators for anything you want. In the next example, we will create a user name validator to match the following rules:</p>
         <ul>
-            <li>
-                <strong>notEmpty()</strong>
-                <p>This rule checks if the input value is not empty.</p>
-            </li>
-            
-            <li>
-                <strong>minLength(min)</strong>
-                <p>This rule checks whether the input has a minimum size, defined through a parameter.</p>
-            </li>
-            
-            <li>
-                <strong>maxLength(max)</strong>
-                <p>This rule checks whether the input has a maximum size, defined through a parameter.</p>
-            </li>
-            
-            <li>
-                <strong>rangeLength(min, max)</strong>
-                <p>This rule works as shorthand for minLength and maxLength.</p>
-            </li>
-            
-            <li>
-                <strong>fixedLength(...fixedLengths)</strong>
-                <p>Check if the input length matches with almost one of the lengths passed through the parameters.</p>
-            </li>
-            
-            <li>
-                <strong>match(...regexPatterns)</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>number()</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>range(min, max)</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>validCPF(checkSeparators)</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>format(...formatStrings)</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>contains(...term)</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>containsAll(...terms)</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>prefix(...prefixes)</strong>
-                <p></p>
-            </li>
-            
-            <li>
-                <strong>sufix(...sufixes)</strong>
-                <p></p>
-            </li>
+            <li>Can't be empty</li>
+            <li>length between 3 and 32 </li>
+            <li>Can't contain space, numbers or special characters</li>
         </ul>
-        <p>Like you see, FormJS has a lot of default validation rules that you can combine to match your requirements. But if you still need something more specific, you can create your own validation rules, like is showing bellow:</p>
-        <snippet lang="js">
+        <snippet>
 <pre>
-const formJS = FormJS()
-
-const validator = formJS()
-    .createRule('custom', ([param0, param1], value) => {
-        var customLogic = ... // Make your own logic (boolean)
-        return customLogic
-    })
-    .custom(param0, param1)
+const validator = formJS(onError) 
+    .notEmpty() // Check if is empty
+    .rangeLength(3, 32) // Limit length between 3 and 32
+    .match(/^(\d||\D)+$/) // Use regex to accept only A-z
 </pre>
         </snippet>
     </section>
@@ -188,7 +113,7 @@ const validator = formJS()
 
         function highlightCodeSnippets(highlighter) {
             document.querySelectorAll('snippet').forEach((snippet) => {
-                snippet.innerHTML = highlighter.codeToHtml(snippet.innerText, { lang: snippet.getAttribute('lang') })
+                snippet.innerHTML = highlighter.codeToHtml(snippet.innerText, { lang: snippet.getAttribute('lang') || 'js' })
             })
         }
     </script>
