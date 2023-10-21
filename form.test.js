@@ -1,6 +1,6 @@
 const output = document.querySelector('ul')
 const errors = []
-const formJS = FormJS(() => {})
+const formJS = new FormJS(() => {})
 
 var testCounter = 0
 
