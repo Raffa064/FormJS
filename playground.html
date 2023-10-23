@@ -105,10 +105,8 @@ const validator = formJS(onError) // Contruct validator
     //.containsAll('Raffa', '064')
     //.prefix('pre', 'p')
     //.sufix('suf', 's')
-    //.createRule('link', ([], value) => value.startsWith('https://'))
+    //.createRule('link', ([], value) => value.startsWith('https://') || value.startsWith('http://'))
     //.link()
-    //.createRule('custom', (a, b, value) => value === a + b)
-    //.custom(5, 6)
     
 input.oninput = () => {
     input.classList.remove('error')

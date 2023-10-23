@@ -292,17 +292,6 @@ const validator = formJS()
     .customRule('param0', 'param1', 'param2')
 </pre>
         </snippet>
-        <p><strong>NOTE:</strong> In the current version, custom rules can't be defined in child validators, like as shown:</p>
-        <snippet>
-            <pre>
-const A = formJS()
-    .createRule('custom', ([], value) => true)
-    .custom() // It can be inherited by child validators
-    
-const B = A.clone()
-    .custom() // It may cause error "custom is not a function"
-</pre>
-        </snippet>
     </section>
 
     <section class="section">

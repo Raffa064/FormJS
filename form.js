@@ -36,6 +36,13 @@ function FormJS(_errorHandler) {
         validator.clone = () => {
             const cloneValidator = formJS(errorHandler)
                 .setRuleList(ruleList)
+                
+            for (const rule in validator) { 
+                const isCustomRule = !cloneValidator[rule]
+                if (isCustomRule) {
+                    cloneValidator[rule] = validator[rule] // Clone custom rules
+                }
+            }
             
             return cloneValidator
         }
