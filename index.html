@@ -37,21 +37,21 @@
             <li>CPF validation</li>
             <li>And much more!</li>
         </ul>
-        
+
         <h1>How to use</h1>
-        
+
         <h2>Adding FormJS to the project</h2>
-        <p>Actually you can add FormJS into your project by including it's (file)[] to your project, or using CDN tag as shown in the following code:</p>
+        <p>Actually you can add FormJS into your project by including it's <a href="https://cdn.jsdelivr.net/gh/Raffa064/FormJS@main/form.js" download>file</a> to your project, or using CDN tag as shown in the following code:</p>
         <snippet lang="html">
-<pre>
+            <pre>
 &lt;script src="https://cdn.jsdelivr.net/gh/Raffa064/FormJS@main/form.js"&gt;&lt;/script&gt;
 </pre>
         </snippet>
-        
+
         <h2>First Steps</h2>
         <p>Before performing validations with FormJS, you will need to instanciate it:</p>
         <snippet>
-<pre>
+            <pre>
 const formJS = FormJS(onError)
 
 function onError(ruleName, ruleParams, value) {
@@ -60,18 +60,247 @@ function onError(ruleName, ruleParams, value) {
 </pre>
         </snippet>
         <p>Note that the onError function is optional, but when passed is used as default for all validations.</p>
-        <p>After it, you can create customized validators for anything you want. In the next example, we will create a user name validator to match the following rules:</p>
+        <p>After it, you can create customized validators for anything you want. In the next example, we will create a user name validator to match the following <strong>rules</strong></strong>:</p>
         <ul>
             <li>Can't be empty</li>
             <li>length between 3 and 32 </li>
             <li>Can't contain space, numbers or special characters</li>
         </ul>
         <snippet>
-<pre>
+            <pre>
 const validator = formJS(onError) 
     .notEmpty() // Check if is empty
     .rangeLength(3, 32) // Limit length between 3 and 32
-    .match(/^(\d||\D)+$/) // Use regex to accept only A-z
+    .match(/^[\w]+$/) // Use regex to accept only A-z
+    
+// Now you can use validator as function
+if (validator("Raffa064")) {
+    // Valid user name
+} else {
+    // Invalid user name
+}
+</pre>
+        </snippet>
+
+        <h2 id="error-handlers">Error handlers</h2>
+        <p>The rules are tested one by one, following the addiction order. However, when a rule doesn't match the input value, it will stop testing, and call an error handler function before returning false.</p>
+        <p>An <em>error handler</em> is a callback function called when a rule doesn't match the given input.</p>
+        <p>Error handler functions receive 3 parameters:</p>
+        <ul>
+            <li><strong>ruleName:</strong> The name of the unmatched rule as string.</li>
+            <li><strong>ruleParams:</strong> Array of rule params, passed during validator construction.</li>
+            <li><strong>value:</strong> The value for validation (as string).</li>
+        </ul>
+        <p>You can set error handlers in two cases, during FormJS instantiation, or during validator construction.</p>
+        <p>If you set an error handler during FormJS instantiation, it will be used as default for all validators. if ou set it during validator contruction it will be used only for hat validator, overriding the default error handler.</p>
+        <snippet>
+            <pre>
+const formJS = new FormJS(DEFAULT_ERROR_HANDLER)
+
+const validNick = formJS(NICK_ERROR_HANDLER)
+    .notEmpty()
+    .rangeLength(5, 32)
+
+function DEFAULT_ERROR_HANDLER(ruleName, ruleParams, value) {
+    console.log('Invalid input: ' + ruleName + '(' + value + ')')
+}
+
+function NICK_ERROR_HANDLER(ruleName, ruleParams, value) {
+    const messages = {
+        notEmpty: "Nick can't be empty",
+        rangeLength: 'Invalid nick length'
+    }
+    
+    alert(messages[ruleName]) // You can change it as you want
+}
+</pre>
+        </snippet>
+        <p>You can also set the validator error handler with <em>setErrorHandler</em>:</p>
+        <snippet>
+            <pre>
+const validator = formJS()
+    .setErrorHandler(errorHandler)
+    // You can add you rules here as usual
+</pre>
+        </snippet>
+        <h2>Clonging validators</h2>
+        <p>If you want to reuse a validator, you can use <em>clone</em> function to create a clone of it.</p>
+        <p>In most cases, it can be helpful to use different error handlers, or to create variations of the same validator.</p>
+        <snippet>
+            <pre>
+const checkNotEmpty = formJS()
+    .notEmpty()
+    
+const checkName = checkNotEmpty.clone()
+    .rangeLength(2, 15)
+    
+// It's like a heritage, checkName is a child of checkNotEmpty 
+</pre>
+        </snippet>
+
+        <h2>Rules</h2>
+        <p>The rules are used to define how the input should be during the validation.</p>
+        <p>During the validatoin, the rules is tested one by one. When a rule does'nt match the input value, it will return false after call a <a href="#error-handlers">error handler</a> function.</p>
+        <p>While contructing an validator you can add nested rules like as shown:</p>
+        <snippet>
+            <pre>
+formJS()
+    .rule1()
+    .rule2()
+    .rule3()
+    .rule4()
+//  etc
+</pre>
+        </snippet>
+        <p>This is the complete list of <strong>default</strong> rules (As you can see in the <a href="#custom-rules">next topic</a>, you can create your own rules).</p>
+        <ul class="doc-rule-list">
+            <li>
+                <strong>notEmpty:</strong>
+                <p><em>No params</em></p>
+                <p>Returns true if the input is empty (the input is trimmed, so it doesn't accept white spaces).</p>
+            </li>
+            <li>
+                <strong>minLength:</strong>
+                <p>Params:</p>
+                <p><em>minLength : integer value</em></p>
+                <p>Check the input length and return true when it's greater than or equal to the minLength param.</p>
+            </li>
+            <li>
+                <strong>maxLength:</strong>
+                <p>Params:</p>
+                <p><em>maxLength : integer value</em></p>
+                <p>Check the input length and return true when it's less than or equal to the maxLength param</p>
+            </li>
+            <li>
+                <strong>rangeLength:</strong>
+                <p>Params:</p>
+                <p><em>minLength : integer value</em></p>
+                <p><em>maxLength : integer value</em></p>
+                <p>Work as shorthand to min and max length. Returns true when input length is equals to or falls between the minLength and maxLength params.</p>
+            </li>
+            <li>
+                <strong>fixedLength:</strong>
+                <p>Params:</p>
+                <p><em>...fixedLengths : integer value(s)</em></p>
+                <p>Receive one or more lenghts, and return true if the input length is equals to almost one of them.</p>
+            </li>
+            <li>
+                <strong>match:</strong>
+                <p>Params:</p>
+                <p><em>...regexPatterns : RegExp value(s) or string value(s)</em></p>
+                <p>Receive one or regex pattern, and return true if input matches almost one of them.</p>
+            </li>
+            <li>
+                <strong>number:</strong>
+                <p><em>No params</em></p>
+                <p>Check if the input is a number (integer or float).</p>
+            </li>
+            <li>
+                <strong>range:</strong>
+                <p>Params</p>
+                <p><em>min : integer value</em></p>
+                <p><em>max : integer value</em></p>
+                <p>Check if the input (as number) is equals to or falls between min and max params.</p>
+            </li>
+            <li>
+                <strong>validCPF:</strong>
+                <p>Params</p>
+                <p><em>checkSeparators : booelan value</em></p>
+                <p>Check if the input is a valid CPF.</p>
+                <p>When <em>checkSeparators</em> param is set as true, it will check if the cpf is in the exact format "nnn.nnn.nnn-nn", before testing if the CPF is valid. If false, it will accept anything that is valid, has between 11 and 14 characters, and number count equal to 11.</p>
+                <p>For example, all these CPFs can be used while checkSeparators is false:</p>
+                <ul>
+                    <li>12345678919</li>
+                    <li>123.45678919</li>
+                    <li>123.456.78919</li>
+                    <li>123.456.789-19</li>
+                    <li>123a456b789c19</li>
+                </ul>
+                <p>In this case, you can add a <a href="#format-rule">format</a> rule together with validCPF to make separated error messages to "Invalid CPF format" and "Invalid CPF".</p>
+                <p>When checkSeparators is true, only right formatted CPF will be accepted, like: "123.456.789.19".</p>
+            </li>
+            <li>
+                <strong id="format-rule">format:</strong>
+                <p>Params</p>
+                <p><em>...formatStrings : string value(s)</em></p>
+                <p>Check if the input matches to almost one of the "format strings" passed as param.</p>
+                <p>A "format string", is a string like "nnn.nnn-nn" used to define the basic structure for the input.</p>
+                <p>To make your format string, you can use these tokens:</p>
+                <ul>
+                    <li># anything</li>
+                    <li>n number (0-9)</li>
+                    <li>d lowercase digit (a-z)</li>
+                    <li>D uppercase digit (A-Z)</li>
+                    <li>w whole case digit (A-z)</li>
+                    <li>/ Use next char as literal (for example, /n will check if the input has a "n" instead of a number)</li>
+                    <li>\b end format (used internally)</li>
+                </ul>
+                <p>An example of use for that is to check CPF, CEP, or phone format.</p>
+                <snippet>
+<pre>
+const checkCPF = formatJS()
+    .format('nnn.nnn.nnn-nn') // Check format
+    .validCPF(false)          // Validate CPF
+</pre>
+                </snippet>
+            </li>
+            <li>
+                <strong>contains:</strong>
+                <p>Params:</p>
+                <p><em>...terms : string value(s)</em></p>
+                <p>Check if input contains almost one of the given terms.</p>
+            </li>
+            <li>
+                <strong>containsAll:</strong>
+                <p>Params:</p>
+                <p><em>...terms : string value(s)</em></p>
+                <p>Check if input contains all the given terms.</p>
+            </li>
+            <li>
+                <strong>prefix:</strong>
+                <p>Params:</p>
+                <p><em>...prefixes : string value(s)</em></p>
+                <p>Check if input starts with almost one of the prefixes passed as param.</p>
+            </li>
+            <li>
+                <strong>sufix:</strong>
+                <p>Params:</p>
+                <p><em>...sufixes : string value(s)</em></p>
+                <p>Check if input ends with almost one of the sufixes passed as param.</p>
+            </li>
+        </ul>
+
+        <h2 id="custom-rules">Custom rules</h2>
+        <p>If you have a specific validation logic that is not provided by default rules, you can easily create your own rule.</p>
+        <p>To create a cutom rule you can call <em>createRule</em> function, passing by param the rule name and the rule function as follows:</p>
+        <snippet>
+            <pre>
+const validator = formJS()
+    .createRule('name', (params, value) => {
+        return true
+    })
+    .name(...) // After created you can use that rule
+</pre>
+        </snippet>
+        <p>Note that the params variable is an array with all the params passed in the rule definition, and you can use brackets to extract its values:</p>
+        <snippet>
+            <pre>
+const validator = formJS()
+    .createRule('customRule', ([param0, param1, param2], value) => {
+        return true // Return true if value matches your validation logic
+    })
+    .customRule('param0', 'param1', 'param2')
+</pre>
+        </snippet>
+        <p><strong>NOTE:</strong> In the current version, custom rules can't be defined in child validators, like as shown:</p>
+        <snippet>
+            <pre>
+const A = formJS()
+    .createRule('custom', ([], value) => true)
+    .custom() // It can be inherited by child validators
+    
+const B = A.clone()
+    .custom() // It may cause error "custom is not a function"
 </pre>
         </snippet>
     </section>

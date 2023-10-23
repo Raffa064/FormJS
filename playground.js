@@ -19,9 +19,9 @@ cmEditor.on('change', () => {
         eval(cmEditor.getValue())
         input.oninput() // Force update
         
-        cm.classList.remove('error')    
-    } catch {
-        console.log('Error')
+        cm.classList.remove('error')
+    } catch(err) {
+        console.log('Error: '+err)
         cm.classList.add('error')    
     }
 })

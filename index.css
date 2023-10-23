@@ -73,6 +73,7 @@ a {
     text-decoration: none; 
     color: #d07;
     font-weight: bold;
+    scroll-behavior: smooth;
 }
 
 a:hover {
@@ -135,4 +136,16 @@ footer a {
     flex: 1;
     text-align: center;
     color: #bbb;
+}
+
+.doc-rule-list {
+    list-style: none;
+}
+
+.doc-rule-list > li {
+    list-style: none;
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    border: 1px solid #aaaa;
+    border-radius: 4px;
 }

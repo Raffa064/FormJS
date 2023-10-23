@@ -21,6 +21,24 @@ function FormJS(_errorHandler) {
 
             return true
         }
+        
+        validator.setRuleList = (_ruleList) => {
+            ruleList.splice(0, ruleList.length)
+            _ruleList.forEach((rule) => ruleList.push(rule))
+            
+            return validator
+        }
+        
+        validator.rules = () => {
+            return ruleList
+        }
+        
+        validator.clone = () => {
+            const cloneValidator = formJS(errorHandler)
+                .setRuleList(ruleList)
+            
+            return cloneValidator
+        }
 
         validator.setErrorHandler = (_errorHandler) => {
             errorHandler = _errorHandler
